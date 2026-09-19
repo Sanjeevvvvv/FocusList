@@ -1,8 +1,27 @@
 # FocusList — Production-Grade To-Do Application
 
+![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-Strict-3178C6?logo=typescript&logoColor=white)
+![Vite](https://img.shields.io/badge/Vite-5-646CFF?logo=vite&logoColor=white)
+![Tests](https://img.shields.io/badge/Tests-32%20passing-brightgreen)
+![License](https://img.shields.io/badge/License-MIT-blue)
+
 FocusList is a high-performance, distraction-free, keyboard-first task management application built with **React 18**, **TypeScript (Strict Mode)**, **Vite**, and **bespoke hand-written CSS** using CSS custom properties. It features zero external CSS frameworks, zero runtime libraries, zero backend or network dependencies, and relies solely on client-side browser persistence via `localStorage`.
 
 ---
+
+## Tech Stack
+
+| Layer | Choice |
+|---|---|
+| UI | React 18 (function components + hooks) |
+| Language | TypeScript, strict mode |
+| Build | Vite 5 |
+| Styling | Hand-written CSS, custom properties, no framework |
+| State | `useReducer` + Context API, pure selectors |
+| Testing | Vitest + React Testing Library |
+| Persistence | Browser `localStorage` |
+| Deployment | Vercel (static SPA) |
 
 ## Table of Contents
 1. [Target Persona & Vertical](#1-target-persona--vertical)
@@ -13,6 +32,9 @@ FocusList is a high-performance, distraction-free, keyboard-first task managemen
 6. [Explicit Assumptions & Design Decisions](#6-explicit-assumptions--design-decisions)
 7. [Innovations, Accessibility & Responsive Polish](#7-innovations-accessibility--responsive-polish)
 8. [Automated Testing, Verification & Deployment](#8-automated-testing-verification--deployment)
+9. [Project Structure](#9-project-structure)
+10. [Contributing](#10-contributing)
+11. [License](#11-license)
 
 ---
 
@@ -223,3 +245,32 @@ The build output in `dist/` is completely static and ready for instant HTTPS dep
 - **Netlify**:
   - Build Command: `npm run build`
   - Publish directory: `dist`
+
+---
+
+## 9. Project Structure
+
+```
+src/
+├── components/     # Presentational, memoized UI components
+├── context/        # TaskContext — app-wide task state provider
+├── hooks/          # useTaskManager, useLocalStorage, useKeyboardShortcut
+├── state/          # Pure tasksReducer + action creators
+├── styles/         # Hand-written CSS, one file per concern
+├── types/          # Shared TypeScript types
+├── selectors.ts    # Pure filter/stat derivation functions
+├── App.tsx         # Composition root
+└── main.tsx        # Entry point, web-vitals reporting
+```
+
+## 10. Contributing
+
+This is a solo hackathon submission and not currently accepting external contributions. If forking for your own use:
+1. Fork the repository
+2. `npm install`
+3. `npm run dev` to start the local dev server
+4. `npm run lint && npm run test && npm run build` before opening a PR
+
+## 11. License
+
+MIT — free to use, modify, and distribute.
