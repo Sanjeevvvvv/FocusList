@@ -1,4 +1,6 @@
-import React from 'react';
+import React, { lazy, Suspense } from 'react';
+
+const CompletionBadge = lazy(() => import('./CompletionBadge').then(({ CompletionBadge }) => ({ default: CompletionBadge })));
 
 interface HeaderProps {
   totalTasks: number;
@@ -64,10 +66,9 @@ export const Header: React.FC<HeaderProps> = React.memo(
           </div>
 
           {isAllComplete && (
-            <div className="status-pill status-pill--complete" role="status">
-              <span className="celebrate-emoji" aria-hidden="true">🎉</span>
-              <span>All Done!</span>
-            </div>
+            <Suspense fallback={null}>
+              <CompletionBadge />
+            </Suspense>
           )}
         </div>
       </header>

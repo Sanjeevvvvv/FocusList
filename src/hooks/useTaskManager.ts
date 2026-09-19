@@ -1,6 +1,6 @@
-import { useState, useCallback } from 'react';
+import { useCallback, useEffect, useReducer, useState } from 'react';
 import type { Task, Priority } from '../types/task';
-import { useLocalStorage } from './useLocalStorage';
+import { readLocalStorageValue, writeLocalStorageValue } from './useLocalStorage';
 import { PRIMARY_STORAGE_KEY, FALLBACK_STORAGE_KEY, INITIAL_TASKS } from '../constants/tasks';
 import { tasksReducer, makeAddAction } from '../state/tasksReducer';
 import { computeStats } from '../selectors';
@@ -37,7 +37,7 @@ function generateId(): string {
  * knowledge of either.
  */
 export function useTaskManager() {
-  const [tasks, setTasks] = useLocalStorage<Task[]>(
+  const initialTasks = readLocalStorageValue<Task[]>(
     PRIMARY_STORAGE_KEY,
     () => {
       if (typeof window !== 'undefined') {
@@ -55,6 +55,29 @@ export function useTaskManager() {
     },
     isTaskArray
   );
+  const [tasks, dispatch] = useReducer(tasksReducer, initialTasks);
+
+  useEffect(() => {
+    writeLocalStorageValue(PRIMARY_STORAGE_KEY, tasks);
+  }, [tasks]);
+
+  useEffect(() => {
+    const handleStorageChange = (event: StorageEvent) => {
+      if (event.key !== PRIMARY_STORAGE_KEY || event.newValue === null) return;
+
+      try {
+        const parsed: unknown = JSON.parse(event.newValue);
+        if (isTaskArray(parsed)) {
+          dispatch({ type: 'HYDRATE', payload: parsed });
+        }
+      } catch {
+        // Ignore invalid external storage updates.
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
 
   const [announcement, setAnnouncement] = useState<string>('');
 
@@ -66,26 +89,24 @@ export function useTaskManager() {
       if (!trimmed) return false;
 
       const action = makeAddAction(trimmed, priority, generateId);
-      setTasks((prev) => tasksReducer(prev, action));
+      dispatch(action);
       setAnnouncement(`Task "${trimmed}" added with ${priority} priority.`);
       return true;
     },
-    [setTasks]
+    []
   );
 
   const toggleComplete = useCallback(
     (id: string) => {
-      setTasks((prev) => {
-        const target = prev.find((t) => t.id === id);
-        if (target) {
-          setAnnouncement(
-            `Task "${target.title}" marked as ${target.completed ? 'incomplete' : 'completed'}.`
-          );
-        }
-        return tasksReducer(prev, { type: 'TOGGLE', payload: { id } });
-      });
+      const target = tasks.find((t) => t.id === id);
+      if (target) {
+        setAnnouncement(
+          `Task "${target.title}" marked as ${target.completed ? 'incomplete' : 'completed'}.`
+        );
+      }
+      dispatch({ type: 'TOGGLE', payload: { id } });
     },
-    [setTasks]
+    [tasks]
   );
 
   const editTask = useCallback(
@@ -93,43 +114,39 @@ export function useTaskManager() {
       const trimmed = newTitle.trim();
       if (!trimmed) return false;
 
-      setTasks((prev) => tasksReducer(prev, { type: 'EDIT', payload: { id, title: trimmed } }));
+      dispatch({ type: 'EDIT', payload: { id, title: trimmed } });
       setAnnouncement(`Task updated to "${trimmed}".`);
       return true;
     },
-    [setTasks]
+    []
   );
 
   const deleteTask = useCallback(
     (id: string) => {
-      setTasks((prev) => {
-        const target = prev.find((t) => t.id === id);
-        setAnnouncement(`Task "${target?.title ?? 'Task'}" deleted.`);
-        return tasksReducer(prev, { type: 'DELETE', payload: { id } });
-      });
+      const target = tasks.find((t) => t.id === id);
+      setAnnouncement(`Task "${target?.title ?? 'Task'}" deleted.`);
+      dispatch({ type: 'DELETE', payload: { id } });
     },
-    [setTasks]
+    [tasks]
   );
 
   const clearCompleted = useCallback(() => {
-    setTasks((prev) => {
-      const completedCount = prev.filter((t) => t.completed).length;
-      if (completedCount === 0) return prev;
-      setAnnouncement(`Cleared ${completedCount} completed tasks.`);
-      return tasksReducer(prev, { type: 'CLEAR_COMPLETED' });
-    });
-  }, [setTasks]);
+    const completedCount = tasks.filter((t) => t.completed).length;
+    if (completedCount === 0) return;
+    setAnnouncement(`Cleared ${completedCount} completed tasks.`);
+    dispatch({ type: 'CLEAR_COMPLETED' });
+  }, [tasks]);
 
   const importTasks = useCallback(
     (incoming: Task[]) => {
       if (isTaskArray(incoming)) {
-        setTasks((prev) => tasksReducer(prev, { type: 'IMPORT', payload: incoming }));
+        dispatch({ type: 'IMPORT', payload: incoming });
         setAnnouncement(`Imported ${incoming.length} tasks successfully.`);
         return true;
       }
       return false;
     },
-    [setTasks]
+    []
   );
 
   return {

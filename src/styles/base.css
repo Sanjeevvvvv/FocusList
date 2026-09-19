@@ -14,7 +14,7 @@ html {
 body {
   min-height: 100vh;
   font-family: var(--font-family-sans);
-  font-size: var(--font-size-base);
+  font-size: clamp(1rem, 0.96rem + 0.18vw, 1.125rem);
   line-height: var(--line-height-normal);
   color: var(--color-text-primary);
   background-color: var(--color-bg);

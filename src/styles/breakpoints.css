@@ -1,0 +1,9 @@
+/* Responsive coverage: 375px phone, 480px phone landscape, 768px tablet,
+   1024px laptop, and 1280px desktop. Components use fluid sizing between them. */
+:root {
+  --breakpoint-phone: 23.4375rem;
+  --breakpoint-phone-wide: 30rem;
+  --breakpoint-tablet: 48rem;
+  --breakpoint-laptop: 64rem;
+  --breakpoint-desktop: 80rem;
+}
